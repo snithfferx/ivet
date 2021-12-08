@@ -1,1 +1,1 @@
-<?php header("location: ../../home.php",true,200); exit; ?>
+<?php $path = dirname(__DIR__,3); header("location: $path/home.php",true,200); exit; ?>

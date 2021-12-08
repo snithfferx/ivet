@@ -1,0 +1,1 @@
+<?php $path = dirname(__DIR__,2); header("location: $path/home.php",true,200); exit; ?>
