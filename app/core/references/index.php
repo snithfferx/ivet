@@ -1,0 +1,1 @@
+<?php header("location: ../index.php",true,200); exit; ?>
