@@ -1,40 +1,33 @@
 <?php
-    class RequireHelper {
+    class RequirerHelper {
+        private $request;
+        private $controller;
+        private $method;
+        private $params;
+        function __Construct() {
+            $this->request = $_REQUEST;
+        }
         /**
          * Esta función verifica la existencia de indices en la variable goblal POST
          * Ejecuta la solicitud y devuelve un "echo" de la respuesta.
          *
          * @return void
          */
-        public function initPost () {
-            if ( isset($_POST['controller']) && !empty($_POST['controller']) ) {
-                if ( isset($_POST['method']) && !empty($_POST['method']) ) {
-                    if (requerir("clase","loader")) {
-                        $carga = new Cargador;
-                        $result = $carga->getResponse($_POST);
-                        $carga = null;
-                    } else {
-                        /* requerir("referencia","errorMessage");
-                        $error = new ErrorMessenger;
-                        $response = $error->errorSender(1,"00501","Not found");
-                        $error = null; */
-                        $result = "Page not  found";
-                    }
-                } else {
-                    /* requerir("referencia","errorMessage");
-                    $error = new ErrorMessenger;
-                    $response = $error->errorSender(1,"00204","Method does not exists.");
-                    $error = null; */
-                    $result = "Method does not exists.";
-                }
+        public function requestResolver () {
+            if ( isset($this->request['controller']) && !empty($this->request['controller']) ) $this->controller = $this->request['controller'];
+            if ( isset($this->request['method']) && !empty($this->request['method']) ) $this->method = $this->request['method'];
+            if ( isset($this->request['ctr']) && !empty($this->request['ctr']) ) $this->controller = $this->request['ctr'];
+            if ( isset($this->request['mtd']) && !empty($this->request['mtd']) ) $this->method = $this->request['mtd'];
+            $messenger = $this->requerirObjecto("referencia","errorMessage");
+            $initializer = $this->requerirObjecto("clase","initializer");
+            $control = $initializer->initObject($this->controller);
+            if ($initializer->methodExists($this->method, $control)) {
+                $this->params = (is_array($this->request['data'])) ? $this->request['data'] : $this->request;
+                $result = $initializer->controller_init($this->controller,$this->method,$this->params);
+                $response = (is_array($result)) ? $this->smarty($result) : $result;
             } else {
-                /* requerir("referencia","errorMessage");
-                $error = new ErrorMessenger;
-                $response = $error->errorSender(1,"00204","Function is not available.");
-                $error = null; */
-                $result = "Function is not available.";
+                $response = $messenger->errorSender(1,"00501","Not found");
             }
-            $response = (is_array($result)) ? $this->smarty($result) : $result;
             return $response;
         }
         /**
@@ -48,27 +41,27 @@
                 $data = explode("&",$_GET['ctr']);
                 if ( isset($data['controller']) && !empty($data['controller']) ) {
                     if ( isset($data['method']) && !empty($data['method']) ) {
-                        $loader = requerir("clase","loader");
+                        $loader = $this->requerirObjecto("clase","loader");
                         if ($loader) {
                             $carga = new Cargador;
                             $response = $carga->getResponse($data);
                         } else {
-                            requerir("referencia","errorMessage");
+                            $this->requerirObjecto("referencia","errorMessage");
                             $error = new ErrorMessenger;
                             $response = $error->errorSender(1,"00501","Not found");
                         }
                     } else {
-                        requerir("referencia","errorMessage");
+                        $this->requerirObjecto("referencia","errorMessage");
                         $error = new ErrorMessenger;
                         $response = $error->errorSender(1,"00204","Method does not exists.");
                     }
                 } else {
-                    requerir("referencia","errorMessage");
+                    $this->requerirObjecto("referencia","errorMessage");
                     $error = new ErrorMessenger;
                     $response = $error->errorSender(1,"00204","This function is not available.");
                 }
             } else {
-                requerir("referencia","errorMessage");
+                $this->requerirObjecto("referencia","errorMessage");
                 $error = new ErrorMessenger;
                 $response = $error->errorSender(1,"00502","Missing Arguments");
             }
@@ -82,11 +75,11 @@
          * @return void
          */
         public function initDefault () {
-            if (requerir("clase","loader")) {
+            if ($this->requerirObjecto("clase","loader")) {
                 $carga = new Cargador;
                 $result = $carga->index();
             } else {
-                requerir("referencia","ErrorViewBuilder");
+                $this->requerirObjecto("referencia","ErrorViewBuilder");
                 $error = new ErrorViewBuilder;
                 $result = $error->errorMessage(1,"00501","404");
             }
@@ -102,7 +95,7 @@
          * @param string $requirementName
          * @return bool
          */
-        public function requerir(string $requirementType, string $requirementName ) {
+        public function requerirObjecto(string $requirementType, string $requirementName ) {
             $type = (!empty($requirementType) || $requirementType != "") ? $requirementType : false;
             $name = (!empty($requirementName) || $requirementName != "") ? $requirementName : false;
             if ($type != false && $name != false) {
@@ -117,7 +110,7 @@
                         $path = _LIBRARY_ . "_" . $name . "_.library.php";
                         break;
                     case "ayudante":
-                        $path = _HELPER_ . "H__" . $name . "__.helper.php";
+                        $path = _HELPER_ . "H_" . $name . "_.helper.php";
                         break;
                     default:
                         $exists = false;

@@ -31,11 +31,6 @@
             return $response;
         }
         /**
-         * Función que devuelve un objeto del tipo controller solicitado por el usuario.
-         * @param string $controller Guarda el nombre del Controller buscado, con la nomenclatura "[Controller]/[Class]"
-         * @return object
-         */
-        /**
          * Función que devuelve el objeto del tipo Model solicitado por el usuario.
          * @param string $module Guarda el nombre del modulo donde se buscará el modelo
          * @param string $model Guarda el nombre del Model buscado, con la nomenclatura "[Model]/[Class]"
@@ -80,6 +75,36 @@
             }
             return $plural;
         }
+        /**
+         * Función que devuelve la respuesta de un controlador
+         * @param array $values Contiene el array de POST o GET enviada desde la vista.
+         * Su estructura es ['controller'{[Modulo]/[Controlador]/[clase]}, 'method'{[función]},'datos'{[array]}]
+         * @return array Contiene la información para la vista, así como el contenido de esta.
+         */
+        public function controller_init($object,string $method, array $values) {
+            if ( $this->getMethod($method , $object) ) {
+                $response = $object->$method($values);
+            } else {
+                $response = [
+                    'error' => [
+                        'code' => "00001",
+                        'driver' => 2,
+                        'message' => "Information not found"
+                    ],
+                    'message' => "fail",
+                ];
+            }
+            return $response;
+        }
+        /**
+         * Esta función busca un método en el controlador del modulo dado.
+         * @param string $method Guarda el nombre del metodo a buscar
+         * @param object $controller Guarda el objeto del tipo Controller donde se buscará el metodo a ejecutarse.
+         * @return bool
+         */
+        public function methodExists(string $method, $controller) {
+            return ( method_exists($controller, $method) ) ? true : false;
+        }
         ########################### Protected Methods ###########################
         /**
          * Función que busca el objeto solicitado por el usuario y lo inicializa.
@@ -121,7 +146,7 @@
                     $path = _LIBRARY_ . "_" . $lv0 . "_.library.php";
                     break;
                 case "ayudante":
-                    $path = _HELPER_ . "H__" . $lv0 . "__.helper.php";
+                    $path = _HELPER_ . "H_" . $lv0 . "_.helper.php";
                     break;
             }
             if ( file_exists($path) ) {

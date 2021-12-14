@@ -12,7 +12,7 @@
          * @return bool|array
          */
         public function getUserSession() {
-            if ( !isset($_SESSION) || empty($_SESSION) ) @session_start();
+            if ($this->isSessionStarted() === false) @session_start();
             if ( isset($_SESSION['user']) && !empty($_SESSION['user']) ) {
                 $response = ( $this->timeOut($_SESSION['time']) ) ? false : $_SESSION;
             } else {
@@ -75,5 +75,24 @@
          */
         protected function setTime($timeLapse) {
             return $time = time() + ($timeLapse * 60);
+        }
+        private function isSessionStarted() {
+            if ( php_sapi_name() !== 'cli' ) {
+                if ( version_compare(phpversion(), '5.4.0', '>=') ) {
+                    return session_status() === PHP_SESSION_ACTIVE ? true : false;
+                } else {
+                    return session_id() === '' ? false : true;
+                }
+            }
+            return false;
+        }
+        function lookForMole() {
+            if ($this->isSessionStarted() === false) session_start();
+            if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
+                return base64_decode($_SESSION["user"]);
+            } else {
+                header("Location: home.html");
+                return false;
+            }
         }
     }
