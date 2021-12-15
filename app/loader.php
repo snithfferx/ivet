@@ -11,18 +11,18 @@
             } elseif (!empty($_GET)) {
                 return $helper->initGet();
             } else {
-                return $helper->initDefault();
+                return $helper->requestResolver();
             }
         }
-        function requireObject (array $values) {
+        function requireObject (string $type, string $values) {
             $helper = new RequirerHelper;
-            return $helper->requerirObjecto($values['type'],$values['name']);
+            return $helper->requerirObjecto($type,$values);
         }
     }
     $app = new Loader;
-    function requerir (string $value) {
-        $obj = explode($value);
-        $app->requireObject($obj);
+    function requerir (string $type, string $name) {
+        $app = new Loader;
+        $app->requireObject($type,$name);
     }
-    $app->request();
+    echo $app->request();
 ?>

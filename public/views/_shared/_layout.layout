@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="{$dom.lang}">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {foreach from=$dom.head.meta item=meta}
+            <meta name="{$meta.name}" content="{$meta.content}">
+        {/foreach}
+        {$dom.head.icon}
+        <title>{$dom.head.title}</title>
+        {$dom.head.css}
+    </head>
+    <body>
+        {$dom.body}
+    </body>
+</html>

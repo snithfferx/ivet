@@ -5,7 +5,7 @@
      * @author Snithfferx
      * @version 0.06.0
      */
-    class Inicializador {
+    class InicializadorClass {
         ########################### Public Methods ###########################
         /**
          * Función que devuelve un objeto solicitado, sea Controller(ctr), Libreria(lib), 
@@ -119,45 +119,56 @@
             switch ($type) {
                 case 'lib':
                     $path = ($lv1 == "" ) ? _MODULE_ . $lv0 . "/_libraries/_" . $lv0 . "_.library.php" : _MODULE_ . $lv0 . "/_libraries/_" . $lv1 . "_.library.php";
+                    $subfix = "Library";
                     break;
                 case 'ref':
                     $path = ($lv1 == "") ? _MODULE_ . $lv0 . "/references/R_" . $lv0 . ".reference.php" : _MODULE_ . $lv0 . "/R_" . $lv1 . ".reference.php";
+                    $subfix = "Reference";
                     break;
                 case 'hlp':
                     $path = ($lv1 == "") ? _MODULE_ . $lv0 . "/_helpers_/H_" . $lv0 . "_.helper.php" : _MODULE_ . $lv0 . "/_helpers_/H_" . $lv1 . "_.helper.php";
+                    $subfix = "Helper";
                     break;
                 case 'ctr':
                     $ctrPlural = ($lv1 == "") ? $this->pluralizer($lv0) : $this->pluralizer($lv1);
                     $path = _MODULE_ . $lv0 . "/controllers/" . $ctrPlural . ".controller.php";
+                    $subfix = "Controller";
                     break;
                 case 'mdl':
                     $path = ($lv1 == "") ? _MODULE_ . $lv0 . "/models/" . $lv0 . ".model.php" : _MODULE_ . $lv0 . "/models/" . $lv1 . ".model.php";
+                    $subfix = "Model";
                     break;
                 case 'cls':
                     $path = ($lv1 == "") ? _MODULE_ . $lv0 . "/classes_/_" . $lv0 . ".class.php" : _MODULE_ . $lv0 . "/classes_/_" . $lv1 . ".class.php";
+                    $subfix = "Class";
                     break;
                 case "clase":
                     $path = _CLASS_ . "_" . $lv0 . ".class.php";
+                    $subfix = "Class";
                     break;
                 case "referencia":
                     $path = _REFERENCE_ . "R_" . $lv0 . ".reference.php";
+                    $subfix = "Reference";
                     break;
                 case "libreria":
                     $path = _LIBRARY_ . "_" . $lv0 . "_.library.php";
+                    $subfix = "Library";
                     break;
                 case "ayudante":
                     $path = _HELPER_ . "H_" . $lv0 . "_.helper.php";
+                    $subfix = "Helper";
                     break;
             }
             if ( file_exists($path) ) {
                 require_once $path;
                 if ($lv2 != "") {
-                    $response = new $lv2;
+                    $class = $lv2 . $subfix;
                 } elseif ($lv1 != "") {
-                    $response = new $lv1;
+                    $class = $lv1 . $subfix;
                 } else {
-                    $response = new $lv0;
+                    $class = $lv0 . $subfix;
                 }
+                $response = new $class;
             } else {
                 $response = false;
             }
@@ -175,7 +186,8 @@
             $exists = ( file_exists($path) ) ? true : false;
             if ( $exists == true ) {
                 require_once $path;
-                $response = new $cl;
+                $class = $cl . "Controller";
+                $response = new $class;
             } else {
                 $response = false;
             }
@@ -193,7 +205,8 @@
             $exists = (file_exists($path)) ? true : false ;
             if ( $exists == true ) {
                 require_once $path;
-                $response = new $cl;
+                $class = $cl . "Model";
+                $response = new $class;
             } else {
                 $response = false;
             }

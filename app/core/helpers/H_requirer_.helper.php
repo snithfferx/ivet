@@ -14,20 +14,53 @@
          * @return void
          */
         public function requestResolver () {
-            if ( isset($this->request['controller']) && !empty($this->request['controller']) ) $this->controller = $this->request['controller'];
-            if ( isset($this->request['method']) && !empty($this->request['method']) ) $this->method = $this->request['method'];
-            if ( isset($this->request['ctr']) && !empty($this->request['ctr']) ) $this->controller = $this->request['ctr'];
-            if ( isset($this->request['mtd']) && !empty($this->request['mtd']) ) $this->method = $this->request['mtd'];
-            $messenger = $this->requerirObjecto("referencia","errorMessage");
-            $initializer = $this->requerirObjecto("clase","initializer");
-            $control = $initializer->initObject($this->controller);
-            if ($initializer->methodExists($this->method, $control)) {
-                $this->params = (is_array($this->request['data'])) ? $this->request['data'] : $this->request;
-                $result = $initializer->controller_init($this->controller,$this->method,$this->params);
-                $response = (is_array($result)) ? $this->smarty($result) : $result;
+            if ( isset($this->request['controller']) && !empty($this->request['controller']) ) {
+                $this->controller = $this->request['controller'];
+            } elseif (isset($this->request['ctr']) || !empty($this->request['ctr'])) {
+                $this->controller = $this->request['ctr'];
             } else {
-                $response = $messenger->errorSender(1,"00501","Not found");
+                $this->controller = null;
             }
+            array_shift($this->request);
+            try {
+                if ($this->requerirObjecto("referencia","viewBuilder")) $messenger = new ViewBuilderReference;
+                if ($this->requerirObjecto("clase","initializer")) $initializer = new InicializadorClass;
+                if ($this->controller != null || !empty($this->controller)) {
+                    $this->controller = $initializer->initObject("ctr",$this->controller);
+                    if ( isset($this->request['method']) && !empty($this->request['method']) ) {
+                        $this->method = $this->request['method'];
+                    } elseif (isset($this->request['mtd']) || !empty($this->request['mtd'])) {
+                        $this->method = $this->request['mtd'];
+                    } else {
+                        $this->method = null;
+                    }
+                    array_shift($this->request);
+                    if ($this->method != null || !empty($this->method)) {
+                        if ($initializer->methodExists($this->method, $this->controller)) {
+                            $this->params = (is_array($this->request['data'])) ? $this->request['data'] : $this->request;
+                            $result = $initializer->controller_init($this->controller,$this->method,$this->params);
+                        } else {
+                            #throw new Exception('Method is not can be found.');
+                            $result = $messenger->viewBuilder("error",[1,"00501","Method is not can be found."]);
+                        }
+                    } else {
+                        #throw new Exception('Method is not can be found.');
+                        $result = $messenger->viewBuilder("error",[1,"00501","Method is not can be found."]);
+                    }
+                } else {
+                    $result = $messenger->viewBuilder("error",[1,"00501","Controller is not can be found."]);
+                    #throw new Exception('Controller is not can be found.');
+                }
+            } catch (Exception $exception) {
+                $data = [
+                    'message' => $exception->getMessage(),
+                    'code'    => $exception->getCode(),
+                    'line'    => $exception->getLine(),
+                    'trace'   => $exception->getTraceAsString()
+                ];
+                $result = $messenger->viewBuilder("error",$data);
+            }            
+            $response = (is_array($result)) ? $this->smarty($result) : $result;
             return $response;
         }
         /**
@@ -36,7 +69,7 @@
          *
          * @return void
          */
-        public function initGet () {
+        /* public function initGet () {
             if (isset($_GET['ctr']) && !empty($_GET['ctr'])) {
                 $data = explode("&",$_GET['ctr']);
                 if ( isset($data['controller']) && !empty($data['controller']) ) {
@@ -67,7 +100,7 @@
             }
             echo $response;
             return false;
-        }
+        } */
         /**
          * Esta función ejecuta la acción por defecto del servidor
          * para posteriormente realizar un "echo" de su respuesta.
@@ -79,9 +112,8 @@
                 $carga = new Cargador;
                 $result = $carga->index();
             } else {
-                $this->requerirObjecto("referencia","ErrorViewBuilder");
-                $error = new ErrorViewBuilder;
-                $result = $error->errorMessage(1,"00501","404");
+                $messenger = $this->requerirObjecto("referencia","viewBuilder");
+                $result = $messenger->viewBuilder("error",[1,"00501","404"]);
             }
             $response = (is_array($result)) ? $this->smarty($result) : $result;
             return $response;
@@ -116,8 +148,7 @@
                         $exists = false;
                         break;
                 }
-                $exists = file_exists($path);
-                if ($exists) require_once $path;
+                $exists = (file_exists($path)) ? require_once $path : false;
             } else {
                 $exists = false;
             }
@@ -132,32 +163,33 @@
          */
         protected function smarty(array $templateData) {
             /* ########## Colectando información para crear la vista ##########*/
-            $moduleDir = $templateData['moduledir'];
-            $layoutDir = $templateData['layoutdir'];
-            $viewName = $templateData['viewname'];
-            $templateDir = $templateData['templatedir'];
-            $data = $templateData['content'];
+            $viewData = $templateData['view'];
+            $viewType = $viewData['type'];
+            $viewName = $viewData['name'];
+            $moduleDir = $viewData['data']['module'];
+            $layoutDir = $viewData['data']['layout'];
+            $templateDir = $viewData['data']['template'];
+            $data = $templateData['data'];
             // ------------------- //
-            $viewType = $templateData['viewtype'];
             $cacheDir = (isset($templateData['cachedir'])) ? $templateData['cachedir'] : "";
             $confDir = (isset($templateData['configdir']))? $templateData['configdir'] : "";
             /* ########## Asignando variables de entorno ##########*/
-            $layoutsDir = (empty($layoutDir)) ? _VIEW_ . $moduleDir : _VIEW_ . $layoutDir;
-            $templatesDir = (empty($templateDir)) ? _VIEW_ . $moduleDir : _VIEW_ . $templateDir;
-            $configsDir = ($confDir == "") ? _APP_ . "/app/configs/" : _VIEW_ . "$moduleDir/$confDir/";
-            $cachesDir = ($confDir == "") ? _APP_ . "/app/cache/" : _VIEW_ . "$moduleDir/$cacheDir/";
+            $layoutsDir = (empty($layoutDir)) ? _VIEW_ . "$moduleDir/" : _VIEW_ . "$moduleDir/$layoutDir/";
+            $templatesDir = (empty($templateDir)) ? _VIEW_ . "$moduleDir/" : _VIEW_ . "$moduleDir/$templateDir/";
+            $configsDir = ($confDir == "") ? _APP_ . "/configs/" : _VIEW_ . "$moduleDir/$confDir/";
+            $cachesDir = ($confDir == "") ? _APP_ . "/cache/" : _VIEW_ . "$moduleDir/$cacheDir/";
             include_once(_REFERENCE_ . "R_templateLibs.reference.php");
             $displayer->setTemplateDir($layoutsDir);
             $displayer->addTemplateDir($templatesDir,"tpl");
             $displayer->setConfigDir($configsDir);
             $displayer->setCacheDir($configsDir);
             /* ########## Realizando test ##########*/
-            #$displayer->testInstall();
+            //$displayer->testInstall();
             /* ########## Asignando variables de contenido ##########*/
-            $displayer->assign("data",$data['data']);
-            $displayer->assign("layout",$data['layout']);
+            $displayer->assign("dom",$data['content']);
+            //$displayer->assign("layout",$data['layout']);
             $displayer->assign("_VISTA_",_VIEW_);
-            #$displayer->assign("_DISENO_",_LAYOUT_);
+            #$displayer->assign("_DESIGN_",_LAYOUT_);
             /* ########## Creando la vista ##########*/
             if ( $viewType == "layout" ) {
                 if ($displayer->templateExists($viewName)) {
@@ -171,7 +203,7 @@
                     //$displayer = null;
                 }
             } else {
-                if (isset($templateData['layoutdir']) && !empty($templateData['layoutdir'])) {
+                if (isset($layoutDir) && !empty($layoutDir)) {
                     $view = $layoutsDir . $viewName;
                     if ($displayer->templateExists($view)) {
                         $response = $displayer->fetch($viewName); #Fetching la respuesta de la librería.

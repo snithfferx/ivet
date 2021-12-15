@@ -14,9 +14,9 @@
      */
         # ---------- Variables globales ---------- #
     define("_APP_", dirname(__DIR__,2));
-    define("_CLASS_", _APP_ . "/app/core/classes/");
-    define("_REFERENCE_", _APP_ . "/app/core/references/");
-    define("_MODULE_", _APP_ . "/app/modules/");
-    define("_LIBRARY_", _APP_ . "/app/core/libraries/");
-    define("_HELPER_", _APP_ . "/app/core/helpers/");
-    define("_VIEW_", _APP_ . "/public/views/");
+    define("_CLASS_", _APP_ . "/core/classes/");
+    define("_REFERENCE_", _APP_ . "/core/references/");
+    define("_MODULE_", _APP_ . "/modules/");
+    define("_LIBRARY_", _APP_ . "/core/libraries/");
+    define("_HELPER_", _APP_ . "/core/helpers/");
+    define("_VIEW_", dirname(_APP_) . "/public/views/");
